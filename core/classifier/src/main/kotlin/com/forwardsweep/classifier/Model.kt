@@ -167,4 +167,6 @@ data class ScoreState(
     /** True when text recognition ran on this image (so [words] = 0 really means no text). */
     val ocrRan: Boolean,
     val words: Int,
+    /** A greeting phrase (Good Morning, शुभ सकाळ, …) was recognised in the text. */
+    val greetingKeyword: Boolean = false,
 )

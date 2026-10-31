@@ -101,6 +101,15 @@ class ScorerSafetyTest {
         assertFalse(c.preselected)
     }
 
+    @Test fun `a photo with a stray word or two is not a greeting`() {
+        // e.g. a temple visit with a small sign in the background: CLIP says "devotional greeting".
+        val ocr = OcrResult(listOf(TextBlock("Shri Mandir", Box(0.4, 0.1, 0.6, 0.13))))
+        val clip = ClipResult(mapOf(Category.GREETING to 0.98, Category.REAL_PHOTO to 0.01, Category.MEME to 0.005, Category.SCREENSHOT to 0.005), FloatArray(4))
+        val c = Scorer(config, PersonalModel()).score(Evidence(meta(), ExifFeatures.NONE, photoTraits, ocr, TextAnalyzer().analyze(ocr), clip, 1, 1L))
+        assertNotEquals(Category.GREETING, c.category)
+        assertFalse(c.preselected)
+    }
+
     @Test fun `vivid image without any text is never a greeting`() {
         val ocr = OcrResult(emptyList())
         val clip = ClipResult(mapOf(Category.GREETING to 0.97, Category.REAL_PHOTO to 0.01, Category.MEME to 0.01, Category.SCREENSHOT to 0.01), FloatArray(4))

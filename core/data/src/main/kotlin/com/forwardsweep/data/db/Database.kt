@@ -63,6 +63,7 @@ data class ScannedImageEntity(
     val exifEvidence: Double = 0.0,
     val ocrRan: Boolean = false,
     val words: Int = 0,
+    val greetingKeyword: Boolean = false,
     /** CLIP embedding, little-endian float32. */
     val embedding: ByteArray? = null,
     val mediaType: MediaType = MediaType.IMAGE,
@@ -210,7 +211,7 @@ class Converters {
     @TypeConverter fun toMediaType(s: String): MediaType = MediaType.valueOf(s)
 }
 
-@Database(entities = [ScannedImageEntity::class, CorrectionEntity::class], version = 3)
+@Database(entities = [ScannedImageEntity::class, CorrectionEntity::class], version = 4)
 @TypeConverters(Converters::class)
 abstract class ForwardSweepDatabase : RoomDatabase() {
     abstract fun images(): ImageDao
@@ -221,8 +222,15 @@ abstract class ForwardSweepDatabase : RoomDatabase() {
             // No destructive fallback: the cache could be rebuilt by rescanning, but the user's
             // corrections could not. Schema changes need a real Migration (schemas/ is exported).
             Room.databaseBuilder(context, ForwardSweepDatabase::class.java, "forwardsweep.db")
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                 .build()
+
+        /** v4: whether a greeting phrase was recognised (for the "too little text" rule). */
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE scanned_images ADD COLUMN greetingKeyword INTEGER NOT NULL DEFAULT 0")
+            }
+        }
 
         /** v3: videos. */
         val MIGRATION_2_3 = object : Migration(2, 3) {

@@ -172,6 +172,7 @@ class Scorer(private val config: ClassifierConfig, private val personal: Persona
             faces = faces,
             ocrRan = ocr != null,
             words = text?.wordCount ?: 0,
+            greetingKeyword = (text?.greeting ?: 0.0) > 0,
         )
         return decide(e.meta.id, e.pHash, state, e.clip?.embedding, features(e))
     }
@@ -233,8 +234,10 @@ class Scorer(private val config: ClassifierConfig, private val personal: Persona
             reasons += "strong camera EXIF blocks junk label"
             category = Category.UNCERTAIN
         }
-        if (category == Category.GREETING && state.ocrRan && state.words < MIN_GREETING_WORDS) {
-            reasons += "no readable text, so not treated as a greeting"
+        // Real greetings carry a wish: a recognised greeting phrase, or a few lines of text. A
+        // stray word on a sign in a temple or puja photo is not enough.
+        if (category == Category.GREETING && state.ocrRan && state.words < MIN_GREETING_WORDS && !state.greetingKeyword) {
+            reasons += "too little text for a greeting"
             category = Category.UNCERTAIN
         }
         val protectedImage = config.protectFaces && faces > 0 &&
@@ -261,7 +264,7 @@ class Scorer(private val config: ClassifierConfig, private val personal: Persona
         private val SCREENSHOT_NAME = Regex("""screenshot|screen_?shot|^scr_|^screen-""")
         private val CAMERA_NAME = Regex("""^(img|vid|pxl|dsc|dcim|photo)_?\d{8}""")
         private val SCREEN_RECORDING_NAME = Regex("""screen[_ -]?record|screenrecord|^record_""")
-        private const val MIN_GREETING_WORDS = 2
+        private const val MIN_GREETING_WORDS = 5
         private val PHONE_WIDTHS = setOf(720, 750, 828, 1080, 1125, 1170, 1179, 1242, 1284, 1290, 1440)
 
         /** 0 below [lo], 1 above [hi], linear between. */

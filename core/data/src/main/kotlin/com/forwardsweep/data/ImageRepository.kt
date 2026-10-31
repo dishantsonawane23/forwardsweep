@@ -33,8 +33,9 @@ import kotlinx.coroutines.withContext
  * Bump when classifier logic changes in a way that should reclassify cached images.
  * 2: CLIP (MobileCLIP2-S0) on device, stored scores + embeddings for learning.
  * 3: CLIP swapped to PE-Core-T (open licence); embeddings change, so everything is re-scored.
+ * 4: greetings need 5+ words or a greeting phrase; stores whether a phrase was found.
  */
-const val CLASSIFIER_VERSION = 3
+const val CLASSIFIER_VERSION = 4
 
 class ImageRepository(
     private val context: Context,
@@ -239,6 +240,7 @@ class ImageRepository(
         exifEvidence = state?.exifEvidence ?: 0.0,
         ocrRan = state?.ocrRan ?: false,
         words = state?.words ?: 0,
+        greetingKeyword = state?.greetingKeyword ?: false,
         embedding = embedding?.toBytes(),
         mediaType = item.mediaType,
         durationMs = item.durationMs,
@@ -248,7 +250,7 @@ class ImageRepository(
         Category.SCORED.joinToString(",") { "%.4f".format(java.util.Locale.ROOT, probabilities[it] ?: 0.0) }
 
     private fun ScannedImageEntity.scoreState(): ScoreState? = baseLogits?.toLogits()?.let { logits ->
-        ScoreState(logits, baseReasons.lines().filter { it.isNotBlank() }, exifEvidence, faces, ocrRan, words)
+        ScoreState(logits, baseReasons.lines().filter { it.isNotBlank() }, exifEvidence, faces, ocrRan, words, greetingKeyword)
     }
 
     companion object {
