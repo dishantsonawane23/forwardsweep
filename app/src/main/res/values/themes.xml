@@ -1,0 +1,3 @@
+<resources>
+    <style name="Theme.ForwardSweep" parent="android:Theme.Material.NoActionBar" />
+</resources>

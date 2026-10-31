@@ -1,0 +1,18 @@
+# Build output
+.gradle/
+.kotlin/
+build/
+*/build/
+.idea/
+*.iml
+local.properties
+
+# Generated evaluation data (regenerate with eval/generate_samples.py)
+eval/sample-set/
+eval/out/
+eval/out-noocr/
+eval/testset/
+
+# Exported models: only the bundled app model is versioned
+*.onnx
+!app/src/main/assets/models/clip_image.onnx
